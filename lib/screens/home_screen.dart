@@ -12,7 +12,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
 
   ///Image paths and food names
-  final images = [
+  final images = [ // gambarnya belum bisa muncul dihome dgn di detail
     "assets/burger.jpg",
     "assets/chicken_g.jpg",
     "assets/chiken_f.jpeg",
