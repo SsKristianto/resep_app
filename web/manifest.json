@@ -1,6 +1,6 @@
 {
-    "name": "resep",
-    "short_name": "resep",
+    "name": "meals_app",
+    "short_name": "meals_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
