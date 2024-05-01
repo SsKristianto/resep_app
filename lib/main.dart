@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import './data/dummy_data.dart';
+import './data/database.dart';
 import './screens/filters_screen.dart';
 import './screens/tabs_screen.dart';
 import './screens/meal_detail_screen.dart';
@@ -8,7 +8,12 @@ import './screens/category_meals_screen.dart';
 import './screens/categories_screen.dart';
 import './Models/meal.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DatabaseHelper().initDatabase(); // Initialize the database
+
+  runApp(MyApp());
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -24,13 +29,24 @@ class _MyAppState extends State<MyApp> {
     'vegetarian': false,
     'vegan': false,
   };
-  List<Meal> _availableMeals = DUMMY_MEALS;
+  List<Meal> _availableMeals = [];
   List<Meal> _favoriteMeals = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final dbHelper = DatabaseHelper();
+    _availableMeals = await dbHelper.getMeals();
+  }
 
   void _setFilters(Map<String, bool> filterData) {
     setState(() {
       _filters = filterData;
-      _availableMeals = DUMMY_MEALS.where((meal) {
+      _availableMeals = _availableMeals.where((meal) {
         if (_filters['gluten']! && !meal.isGlutenFree) {
           return false;
         }
@@ -50,14 +66,14 @@ class _MyAppState extends State<MyApp> {
 
   void _toggleFavorite(String mealId) {
     final existingIndex =
-        _favoriteMeals.indexWhere((meal) => meal.id == mealId);
+    _favoriteMeals.indexWhere((meal) => meal.id == mealId);
     if (existingIndex >= 0) {
       setState(() {
         _favoriteMeals.removeAt(existingIndex);
       });
     } else {
       setState(() {
-        _favoriteMeals.add(DUMMY_MEALS.firstWhere((meal) => meal.id == mealId));
+        _favoriteMeals.add(_availableMeals.firstWhere((meal) => meal.id == mealId));
       });
     }
   }
@@ -70,7 +86,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'DeliMeals',
+      title: 'Resep',
       theme: ThemeData(
         primarySwatch: Colors.green,
         colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.amber),
@@ -95,25 +111,12 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/': ((context) => TabsScreen(_favoriteMeals)),
         CategoryMealsScreen.routeName: ((context) =>
-            CategoryMealsScreen(_availableMeals)),
-        // '/category-meals': ((context) => CategoryMealsScreen()),
+            CategoryMealsScreen()), // Remove argument here
         MealDetailScreen.routeName: (context) =>
             MealDetailScreen(_toggleFavorite, isMealFavorite),
         FiltersScreen.routeName: (context) =>
             FiltersScreen(_filters, _setFilters),
       },
-
-      // onGenerateRoute: (settings) {
-      //   print(settings.arguments);
-      //   print(settings.name);
-      //   if (settings.name == '/meal-detail') {
-      //     return null;
-      //   } else if (settings.name == '/something-else') {
-      //     return null;
-      //   }
-      //   return MaterialPageRoute(builder: ((context) => CategoriesScreen()));
-      // },
-
       onUnknownRoute: (settings) {
         return MaterialPageRoute(builder: ((context) => CategoriesScreen()));
       },

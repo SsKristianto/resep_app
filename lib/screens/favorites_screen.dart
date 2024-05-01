@@ -1,15 +1,57 @@
 import 'package:flutter/material.dart';
 import '../widgets/meal_item.dart';
 import '../Models/meal.dart';
+import '../data/database.dart';
 
-class FavoritesScreen extends StatelessWidget {
-  final List<Meal> favoriteMeals;
+class FavoritesScreen extends StatefulWidget {
+  @override
+  _FavoritesScreenState createState() => _FavoritesScreenState();
+}
 
-  FavoritesScreen(this.favoriteMeals);
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  late List<Meal> _favoriteMeals = [];
+
+  @override
+  void initState() {
+    _loadFavoriteMealsFromDatabase();
+    super.initState();
+  }
+
+  Future<void> _loadFavoriteMealsFromDatabase() async {
+    try {
+      final dbHelper = DatabaseHelper();
+      final bookmarkedMealIds = await dbHelper.getBookmarkedMealIds();
+      final List<Meal> favoriteMeals = [];
+      for (var mealId in bookmarkedMealIds) {
+        final meal = await dbHelper.getMealById(mealId);
+        favoriteMeals.add(meal);
+      }
+      setState(() {
+        _favoriteMeals = favoriteMeals;
+      });
+    } catch (error) {
+      print('Error loading favorite meals: $error');
+    }
+  }
+
+  Future<void> _toggleFavorite(String mealId) async {
+    final dbHelper = DatabaseHelper();
+    final isFavorite = _favoriteMeals.any((meal) => meal.id == mealId);
+    if (isFavorite) {
+      await dbHelper.deleteBookmark(mealId);
+    } else {
+      await dbHelper.insertOrUpdateBookmark(mealId);
+    }
+    _loadFavoriteMealsFromDatabase();
+  }
+
+  bool isMealFavorite(String mealId) {
+    return _favoriteMeals.any((meal) => meal.id == mealId);
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (favoriteMeals.isEmpty) {
+    if (_favoriteMeals.isEmpty) {
       return Center(
         child: Text(
           'You have no Favorites--Start Adding Some',
@@ -20,17 +62,18 @@ class FavoritesScreen extends StatelessWidget {
       return ListView.builder(
         itemBuilder: (ctx, index) {
           return MealItem(
-            id: favoriteMeals[index].id,
-            title: favoriteMeals[index].title,
-            imageUrl: favoriteMeals[index].imageUrl,
-            duration: favoriteMeals[index].duration,
-            complexity: favoriteMeals[index].complexity,
-            affordability: favoriteMeals[index].affordability,
+            id: _favoriteMeals[index].id,
+            title: _favoriteMeals[index].title,
+            imageUrl: _favoriteMeals[index].imageUrl,
+            duration: _favoriteMeals[index].duration,
+            complexity: _favoriteMeals[index].complexity,
+            affordability: _favoriteMeals[index].affordability,
           );
           // return Text(favoriteMeals[index].title);
         },
-        itemCount: favoriteMeals.length,
+        itemCount: _favoriteMeals.length,
       );
     }
   }
 }
+
