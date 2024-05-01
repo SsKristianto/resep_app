@@ -81,7 +81,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
               ),
               TextField(
                 decoration:
-                InputDecoration(labelText: 'Categories (comma-separated)'),
+                InputDecoration(labelText: 'Categories (EX : c1,c2,..,c10)'),
                 controller: categoriesController,
               ),
               TextField(
