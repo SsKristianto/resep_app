@@ -48,4 +48,37 @@ class Meal {
       'is_lactose_free': isLactoseFree ? 1 : 0,
     };
   }
+
+  Meal copyWith({
+    String? id,
+    List<String>? categories,
+    String? title,
+    String? imageUrl,
+    List<String>? ingredients,
+    List<String>? steps,
+    int? duration,
+    Complexity? complexity,
+    Affordability? affordability,
+    bool? isGlutenFree,
+    bool? isLactoseFree,
+    bool? isVegan,
+    bool? isVegetarian,
+  }) {
+    return Meal(
+      id: id ?? this.id,
+      categories: categories ?? this.categories,
+      title: title ?? this.title,
+      imageUrl: imageUrl ?? this.imageUrl,
+      ingredients: ingredients ?? this.ingredients,
+      steps: steps ?? this.steps,
+      duration: duration ?? this.duration,
+      complexity: complexity ?? this.complexity,
+      affordability: affordability ?? this.affordability,
+      isGlutenFree: isGlutenFree ?? this.isGlutenFree,
+      isLactoseFree: isLactoseFree ?? this.isLactoseFree,
+      isVegan: isVegan ?? this.isVegan,
+      isVegetarian: isVegetarian ?? this.isVegetarian,
+    );
+  }
+
 }

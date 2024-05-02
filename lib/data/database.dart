@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-
 import '../Models/meal.dart';
 import '../Models/category.dart';
+import 'dummy_data.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._();
@@ -64,7 +64,17 @@ class DatabaseHelper {
           FOREIGN KEY (meal_id) REFERENCES meals (id)
         )
       ''');
+
+        // Insert dummy meals
+        for (final meal in DUMMY_MEALS) {
+          await db.insert(
+            'meals',
+            meal.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
       },
+
       // Set onUpgrade to handle database version upgrades
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         // Handle database migrations if needed
@@ -150,21 +160,36 @@ class DatabaseHelper {
 
   Future<void> insertOrUpdateBookmark(String mealId) async {
     final db = await database;
-    await db!.insert(
-      'bookmarks',
-      {'meal_id': mealId},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    final existingBookmarks = await db!.query('bookmarks', where: 'meal_id = ?', whereArgs: [mealId]);
+    if(existingBookmarks.isEmpty) {
+      // If there is no bookmark for this meal, add a new one
+      final result = await db.insert(
+        'bookmarks',
+        {'meal_id': mealId},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print('Inserted new bookmark for meal ID: $mealId, result: $result');
+    } else {
+      // If the bookmark already exists, delete it
+      final result = await db.delete(
+        'bookmarks',
+        where: 'meal_id = ?',
+        whereArgs: [mealId],
+      );
+      print('Deleted bookmark for meal ID: $mealId, result: $result');
+    }
   }
 
   Future<void> deleteBookmark(String mealId) async {
     final db = await database;
-    await db!.delete(
+    final result = await db!.delete(
       'bookmarks',
       where: 'meal_id = ?',
       whereArgs: [mealId],
     );
+    print('Deleted bookmark for meal ID: $mealId, result: $result');
   }
+
 
   Future<List<String>> getBookmarkedMealIds() async {
     final db = await database;
@@ -173,6 +198,7 @@ class DatabaseHelper {
       return maps[i]['meal_id'];
     });
   }
+
 
 // Add other database operations here
 }

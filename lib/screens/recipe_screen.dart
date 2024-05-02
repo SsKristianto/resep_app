@@ -11,6 +11,8 @@ class RecipeScreen extends StatefulWidget {
 
 class _RecipeScreenState extends State<RecipeScreen> {
   late List<Meal> _meals = [];
+  Complexity enteredComplexity = Complexity.Simple;
+  Affordability enteredAffordability = Affordability.Affordable;
 
   @override
   void initState() {
@@ -33,7 +35,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
   Future<void> _removeMeal(String mealId) async {
     try {
       final dbHelper = DatabaseHelper();
+
+      // Hapus semua bookmark yang terkait
+      await dbHelper.deleteBookmark(mealId);
+
+      // Hapus meal dari meals
       await dbHelper.deleteMeal(mealId);
+
       setState(() {
         _meals.removeWhere((meal) => meal.id == mealId);
       });
@@ -41,6 +49,8 @@ class _RecipeScreenState extends State<RecipeScreen> {
       print('Error removing meal: $error');
     }
   }
+
+
 
   Future<void> _showAddEditMealDialog({Meal? meal}) async {
     TextEditingController titleController =
@@ -97,10 +107,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 maxLines: null,
               ),
               DropdownButtonFormField<Complexity>(
-                value: meal?.complexity ?? Complexity.Simple,
+                value: enteredComplexity,
                 onChanged: (newValue) {
                   setState(() {
-                    // Handle complexity change
+                    enteredComplexity = newValue ?? Complexity.Simple;
                   });
                 },
                 items: Complexity.values.map((value) {
@@ -112,10 +122,10 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 decoration: InputDecoration(labelText: 'Complexity'),
               ),
               DropdownButtonFormField<Affordability>(
-                value: meal?.affordability ?? Affordability.Affordable,
+                value: enteredAffordability,
                 onChanged: (newValue) {
                   setState(() {
-                    // Handle affordability change
+                    enteredAffordability = newValue ?? Affordability.Affordable;
                   });
                 },
                 items: Affordability.values.map((value) {
@@ -211,8 +221,6 @@ class _RecipeScreenState extends State<RecipeScreen> {
                   .toList();
               final enteredDuration =
                   int.tryParse(durationController.text) ?? 0;
-              final enteredComplexity = Complexity.Simple;
-              final enteredAffordability = Affordability.Affordable;
 
               if (enteredTitle.isEmpty ||
                   enteredImageUrl.isEmpty ||
@@ -241,7 +249,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
               final dbHelper = DatabaseHelper();
               if (isEditing) {
                 try {
-                  await dbHelper.insertOrUpdateMeal(newMeal); // Use insertOrUpdateMeal instead of insertMeal
+                  await dbHelper.insertOrUpdateMeal(newMeal);
                   final index = _meals.indexWhere((element) => element.id == mealId);
                   if (index != -1) {
                     setState(() {
@@ -253,7 +261,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                 }
               } else {
                 try {
-                  await dbHelper.insertOrUpdateMeal(newMeal); // Use insertOrUpdateMeal instead of insertMeal
+                  await dbHelper.insertOrUpdateMeal(newMeal);
                   setState(() {
                     _meals.add(newMeal);
                   });

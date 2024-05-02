@@ -138,24 +138,25 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
             final dbHelper = DatabaseHelper();
-            final isFavorite = widget.isMealFavorite(_selectedMeal.id);
-            try {
-              if (isFavorite) {
-                // If the meal is already bookmarked, delete the bookmark
-                await dbHelper.deleteBookmark(_selectedMeal.id);
-              } else {
-                // If the meal is not bookmarked, insert a bookmark
-                await dbHelper.insertOrUpdateBookmark(_selectedMeal.id);
+            if (_selectedMeal != null) {
+              try {
+                final isFavorite = widget.isMealFavorite(_selectedMeal.id);
+                if (isFavorite) {
+                  await dbHelper.deleteBookmark(_selectedMeal.id);
+                } else {
+                  await dbHelper.insertOrUpdateBookmark(_selectedMeal.id);
+                }
+                widget._toggleFavorite(_selectedMeal.id);
+                setState(() {}); // Update the view after bookmark change
+              } catch (error) {
+                print('Error toggling bookmark: $error');
               }
-              // Update the UI to reflect the change in bookmark status
-              widget._toggleFavorite(_selectedMeal.id);
-            } catch (error) {
-              print('Error toggling bookmark: $error');
+            } else {
+              print('_selectedMeal is null');
             }
-          },
-          child: Icon(
-            widget.isMealFavorite(_selectedMeal.id) ? Icons.star : Icons.star_border,
-          ),
+          },child: Icon(
+          widget.isMealFavorite(_selectedMeal.id) ? Icons.star : Icons.star_border,
+        ),
         ),
       );
     }
